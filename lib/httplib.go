@@ -29,7 +29,7 @@
 //	fmt.Println(str)
 //
 //  more docs http://beego.me/docs/module/httplib.md
-package httplib
+package abat
 
 import (
 	"bytes"
