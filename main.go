@@ -1,4 +1,4 @@
-// Copyright 2015 bat authors
+// Copyright 2015 abat authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License"): you may
 // not use this file except in compliance with the License. You may obtain
@@ -12,8 +12,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-// Bat is a Go implemented CLI cURL-like tool for humans
-// bat [flags] [METHOD] URL [ITEM [ITEM]]
+// Abat is a Go implemented CLI cURL-like tool for humans
+// abat [flags] [METHOD] URL [ITEM [ITEM]]
 package main
 
 import (
@@ -67,8 +67,8 @@ func main() {
 
 var examples string = `
 examples:
-	abat so.com
-	abat accact help
+	abat t.tt
+	abat attact help
 	abat report help
 `
 
