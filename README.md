@@ -1,7 +1,7 @@
 # abat
 Go implemented CLI cURL-like tool for humans. Abat can be used for testing, debugging, and generally interacting with HTTP servers.
 
-Fork from [Httpie](https://github.com/astaxie/bat), use  a versatile HTTP load testing tool library stress [Httpie](https://github.com/buaazp/stress). Thanks to the author, astaxie buzzap.
+Fork from [bat](https://github.com/astaxie/bat), use  a versatile HTTP load testing tool library [stress](https://github.com/buaazp/stress). Thanks to the author, astaxie buzzap.
 
 
 - [Main Features](#main-features)
@@ -39,7 +39,7 @@ Hello World:
 
 Synopsis:
 
-	abat [flags] [METHOD] URL [ITEM [ITEM]]
+	abat [METHOD] [flags] URL [ITEM [ITEM]]
 	
 See also `abat --help`. `abat attact help`. `abat report help`
 
