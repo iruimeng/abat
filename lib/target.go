@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -47,13 +48,18 @@ func (t *Target) Request() (req *http.Request, err error) {
 				return
 			}
 
-			fw, err := wtr.CreateFormFile(fileKey, fileName)
-			if err != nil {
+			var (
+				fw     io.Writer
+				fd     *os.File
+				e1, e2 error
+			)
+			if fw, e1 = wtr.CreateFormFile(fileKey, fileName); e1 != nil {
+				err = e1
 				return
 			}
 
-			fd, err := os.Open(fileName)
-			if err != nil {
+			if fd, e2 = os.Open(fileName); e2 != nil {
+				err = e2
 				return
 			}
 			defer fd.Close()
@@ -66,10 +72,10 @@ func (t *Target) Request() (req *http.Request, err error) {
 			req.Header.Set("Content-Type", wtr.FormDataContentType())
 
 		} else {
-			fbody, err := os.Open(t.File)
+			fbody, e := os.Open(t.File)
 			defer fbody.Close()
-			if err != nil {
-				err = fmt.Errorf("Post file: (%s): %s", t.File, err)
+			if e != nil {
+				err = fmt.Errorf("Post file: (%s): %s", t.File, e)
 				return
 			}
 
@@ -91,7 +97,7 @@ func (t *Target) Request() (req *http.Request, err error) {
 		return
 	}
 	for key, val := range t.Header {
-		req.Header[key] = make([]sting, len(val))
+		req.Header[key] = make([]string, len(val))
 		copy(req.Header[key], val)
 	}
 	req.Header.Set("User-Agent", "abat 0.1")

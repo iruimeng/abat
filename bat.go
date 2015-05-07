@@ -1,19 +1,3 @@
-// Copyright 2015 bat authors
-//
-// Licensed under the Apache License, Version 2.0 (the "License"): you may
-// not use this file except in compliance with the License. You may obtain
-// a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-// WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-// License for the specific language governing permissions and limitations
-// under the License.
-
-// Bat is a Go implemented CLI cURL-like tool for humans
-// bat [flags] [METHOD] URL [ITEM [ITEM]]
 package main
 
 import (
@@ -35,7 +19,11 @@ import (
 
 const version = "0.0.3"
 
-var (
+//isjson           = flag.Bool("json", true, "Send the data as a JSON object")
+//method           = flag.String("method", "GET", "HTTP method")
+//URL              = flag.String("url", "", "HTTP request URL")
+//contentJsonRegex = `application/json`
+type batOpts struct {
 	ver              bool
 	form             bool
 	pretty           bool
@@ -45,51 +33,63 @@ var (
 	proxy            string
 	printV           string
 	body             string
-	bench            bool
-	benchN           int
-	benchC           int
-	isjson           = flag.Bool("json", true, "Send the data as a JSON object")
-	method           = flag.String("method", "GET", "HTTP method")
-	URL              = flag.String("url", "", "HTTP request URL")
+	help             bool
+	URL              string
+	isjson           bool
+	method           string
+	contentJsonRegex string
 	jsonmap          map[string]interface{}
-	contentJsonRegex = `application/json`
-)
-
-func init() {
-	flag.BoolVar(&ver, "v", false, "Print Version Number")
-	flag.BoolVar(&ver, "version", false, "Print Version Number")
-	flag.BoolVar(&pretty, "pretty", true, "Print Json Pretty Fomat")
-	flag.BoolVar(&pretty, "p", true, "Print Json Pretty Fomat")
-	flag.StringVar(&printV, "print", "A", "Print request and response")
-	flag.BoolVar(&form, "form", false, "Submitting as a form")
-	flag.BoolVar(&form, "f", false, "Submitting as a form")
-	flag.BoolVar(&download, "download", false, "Download the url content as file")
-	flag.BoolVar(&download, "d", false, "Download the url content as file")
-	flag.BoolVar(&insecureSSL, "insecure", false, "Allow connections to SSL sites without certs")
-	flag.BoolVar(&insecureSSL, "i", false, "Allow connections to SSL sites without certs")
-	flag.StringVar(&auth, "auth", "", "HTTP authentication username:password, USER[:PASS]")
-	flag.StringVar(&auth, "a", "", "HTTP authentication username:password, USER[:PASS]")
-	flag.StringVar(&proxy, "proxy", "", "Proxy host and port, PROXY_URL")
-	flag.BoolVar(&bench, "bench", false, "Sends bench requests to URL")
-	flag.BoolVar(&bench, "b", false, "Sends bench requests to URL")
-	flag.IntVar(&benchN, "b.N", 1000, "Number of requests to run")
-	flag.IntVar(&benchC, "b.C", 100, "Number of requests to run concurrently.")
-	flag.StringVar(&body, "body", "", "Raw data send as body")
-	jsonmap = make(map[string]interface{})
 }
 
-func main() {
-	flag.Usage = usage
-	flag.Parse()
-	args := flag.Args()
-	if len(args) > 0 {
-		args = filter(args)
+//var opts *batOpts = &batOpts{}
+
+func batCmd() command {
+	fs := flag.NewFlagSet("abat bat", flag.ExitOnError)
+	opts := &batOpts{
+		contentJsonRegex: `application/json`,
 	}
-	if ver {
-		fmt.Println("Version:", version)
+
+	fs.BoolVar(&opts.isjson, "json", true, "Send the data as a JSON object")
+	fs.BoolVar(&opts.ver, "v", false, "Print Version Number")
+	fs.BoolVar(&opts.ver, "version", false, "Print Version Number")
+	fs.BoolVar(&opts.pretty, "pretty", true, "Print Json Pretty Fomat")
+	fs.BoolVar(&opts.pretty, "p", true, "Print Json Pretty Fomat")
+	fs.StringVar(&opts.printV, "print", "A", "Print request and response")
+	fs.BoolVar(&opts.form, "form", false, "Submitting as a form")
+	fs.BoolVar(&opts.form, "f", false, "Submitting as a form")
+	fs.BoolVar(&opts.download, "download", false, "Download the url content as file")
+	fs.BoolVar(&opts.download, "d", false, "Download the url content as file")
+	fs.BoolVar(&opts.insecureSSL, "insecure", false, "Allow connections to SSL sites without certs")
+	fs.BoolVar(&opts.insecureSSL, "i", false, "Allow connections to SSL sites without certs")
+	fs.StringVar(&opts.URL, "url", "", "HTTP request URL")
+	fs.StringVar(&opts.method, "method", "GET", "HTTP method")
+	fs.StringVar(&opts.auth, "auth", "", "HTTP authentication username:password, USER[:PASS]")
+	fs.StringVar(&opts.auth, "a", "", "HTTP authentication username:password, USER[:PASS]")
+	fs.StringVar(&opts.proxy, "proxy", "", "Proxy host and port, PROXY_URL")
+	fs.StringVar(&opts.body, "body", "", "Raw data send as body")
+	fs.BoolVar(&opts.help, "help", false, "Print Help Info")
+	fs.BoolVar(&opts.help, "h", false, "Print Help Info")
+	opts.jsonmap = make(map[string]interface{})
+
+	return command{fs, func(args []string) error {
+		fs.Parse(args)
+		return bat(opts)
+	}}
+}
+
+// abat拥有bat命令的全部
+func bat(opts *batOpts) error {
+	args := flag.Args()
+
+	//fmt.Println("bat args\n", args)
+	if len(args) > 0 {
+		args = filter(args, opts)
+	}
+	if opts.ver {
+		fmt.Println("Abat Version:", version)
 		os.Exit(2)
 	}
-	if printV != "A" && printV != "B" {
+	if opts.printV != "A" && opts.printV != "B" {
 		defaultSetting.DumpBody = false
 	}
 	var stdin []byte
@@ -102,64 +102,68 @@ func main() {
 			stdin, err = ioutil.ReadAll(os.Stdin)
 			if err != nil {
 				log.Fatal("Read from Stdin", err)
+				return err
 			}
 		}
 	}
 
-	if *URL == "" {
-		usage()
+	if opts.URL == "" {
+		batUsage()
 	}
-	if strings.HasPrefix(*URL, ":") {
-		urlb := []byte(*URL)
-		if *URL == ":" {
-			*URL = "http://localhost/"
-		} else if len(*URL) > 1 && urlb[1] != '/' {
-			*URL = "http://localhost" + *URL
+	if strings.HasPrefix(opts.URL, ":") {
+		urlb := []byte(opts.URL)
+		if opts.URL == ":" {
+			opts.URL = "http://localhost/"
+		} else if len(opts.URL) > 1 && urlb[1] != '/' {
+			opts.URL = "http://localhost" + opts.URL
 		} else {
-			*URL = "http://localhost" + string(urlb[1:])
+			opts.URL = "http://localhost" + string(urlb[1:])
 		}
 	}
-	if !strings.HasPrefix(*URL, "http://") && !strings.HasPrefix(*URL, "https://") {
-		*URL = "http://" + *URL
+	if !strings.HasPrefix(opts.URL, "http://") && !strings.HasPrefix(opts.URL, "https://") {
+		opts.URL = "http://" + opts.URL
 	}
-	u, err := url.Parse(*URL)
+	u, err := url.Parse(opts.URL)
 	if err != nil {
 		log.Fatal(err)
+		return err
 	}
-	if auth != "" {
-		userpass := strings.Split(auth, ":")
+	if opts.auth != "" {
+		userpass := strings.Split(opts.auth, ":")
 		if len(userpass) == 2 {
 			u.User = url.UserPassword(userpass[0], userpass[1])
 		} else {
-			u.User = url.User(auth)
+			u.User = url.User(opts.auth)
 		}
 	}
-	*URL = u.String()
-	httpreq := getHTTP(*method, *URL, args)
+	opts.URL = u.String()
+	httpreq := getHTTP(opts.method, opts.URL, args, opts)
 	if u.User != nil {
 		password, _ := u.User.Password()
 		httpreq.GetRequest().SetBasicAuth(u.User.Username(), password)
 	}
 	// Insecure SSL Support
-	if insecureSSL {
+	if opts.insecureSSL {
 		httpreq.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 	}
 	// Proxy Support
-	if proxy != "" {
-		purl, err := url.Parse(proxy)
+	if opts.proxy != "" {
+		purl, err := url.Parse(opts.proxy)
 		if err != nil {
 			log.Fatal("Proxy Url parse err", err)
+			return err
 		}
 		httpreq.SetProxy(http.ProxyURL(purl))
 	} else {
 		eurl, err := http.ProxyFromEnvironment(httpreq.GetRequest())
 		if err != nil {
 			log.Fatal("Environment Proxy Url parse err", err)
+			return err
 		}
 		httpreq.SetProxy(http.ProxyURL(eurl))
 	}
-	if body != "" {
-		httpreq.Body(body)
+	if opts.body != "" {
+		httpreq.Body(opts.body)
 	}
 	if len(stdin) > 0 {
 		var j interface{}
@@ -171,19 +175,14 @@ func main() {
 		}
 	}
 
-	// AB bench
-	if bench {
-		httpreq.Debug(false)
-		RunBench(httpreq)
-		return
-	}
 	res, err := httpreq.Response()
 	if err != nil {
 		log.Fatalln("can't get the url", err)
+		return err
 	}
 
 	// download file
-	if download {
+	if opts.download {
 		var fl string
 		if disposition := res.Header.Get("Content-Disposition"); disposition != "" {
 			fls := strings.Split(disposition, ";")
@@ -200,6 +199,7 @@ func main() {
 		fd, err := os.OpenFile(fl, os.O_RDWR|os.O_CREATE, 0666)
 		if err != nil {
 			log.Fatal("can't create file", err)
+			return err
 		}
 		if runtime.GOOS != "windowns" {
 			fmt.Println(Color(res.Proto, Magenta), Color(res.Status, Green))
@@ -225,11 +225,12 @@ func main() {
 		_, err = io.Copy(multiWriter, res.Body)
 		if err != nil {
 			log.Fatal("Can't Write the body into file", err)
+			return err
 		}
 		pb.Finish()
 		defer fd.Close()
 		defer res.Body.Close()
-		return
+		return err
 	}
 
 	if runtime.GOOS != "windows" {
@@ -238,9 +239,9 @@ func main() {
 			panic(err)
 		}
 		if fi.Mode()&os.ModeDevice == os.ModeDevice {
-			if printV == "A" || printV == "H" || printV == "B" {
+			if opts.printV == "A" || opts.printV == "H" || opts.printV == "B" {
 				dump := httpreq.DumpRequest()
-				if printV == "B" {
+				if opts.printV == "B" {
 					dps := strings.Split(string(dump), "\n")
 					for i, line := range dps {
 						if len(strings.Trim(line, "\r\n ")) == 0 {
@@ -249,31 +250,32 @@ func main() {
 						}
 					}
 				}
-				fmt.Println(ColorfulRequest(string(dump)))
+				fmt.Println(ColorfulRequest(string(dump), opts))
 				fmt.Println("")
 			}
-			if printV == "A" || printV == "h" {
+			if opts.printV == "A" || opts.printV == "h" {
 				fmt.Println(Color(res.Proto, Magenta), Color(res.Status, Green))
 				for k, v := range res.Header {
 					fmt.Println(Color(k, Gray), ":", Color(strings.Join(v, " "), Cyan))
 				}
 				fmt.Println("")
 			}
-			if printV == "A" || printV == "b" {
-				body := formatResponseBody(res, httpreq, pretty)
-				fmt.Println(ColorfulResponse(body, res.Header.Get("Content-Type")))
+			if opts.printV == "A" || opts.printV == "b" {
+				body := formatResponseBody(res, httpreq, opts.pretty, opts.contentJsonRegex)
+				fmt.Println(ColorfulResponse(body, res.Header.Get("Content-Type"), opts))
 			}
 		} else {
-			body := formatResponseBody(res, httpreq, pretty)
+			body := formatResponseBody(res, httpreq, opts.pretty, opts.contentJsonRegex)
 			_, err = os.Stdout.WriteString(body)
 			if err != nil {
 				log.Fatal(err)
+				return err
 			}
 		}
 	} else {
-		if printV == "A" || printV == "H" || printV == "B" {
+		if opts.printV == "A" || opts.printV == "H" || opts.printV == "B" {
 			dump := httpreq.DumpRequest()
-			if printV == "B" {
+			if opts.printV == "B" {
 				dps := strings.Split(string(dump), "\n")
 				for i, line := range dps {
 					if len(strings.Trim(line, "\r\n ")) == 0 {
@@ -285,31 +287,29 @@ func main() {
 			fmt.Println(string(dump))
 			fmt.Println("")
 		}
-		if printV == "A" || printV == "h" {
+		if opts.printV == "A" || opts.printV == "h" {
 			fmt.Println(res.Proto, res.Status)
 			for k, v := range res.Header {
 				fmt.Println(k, ":", strings.Join(v, " "))
 			}
 			fmt.Println("")
 		}
-		if printV == "A" || printV == "b" {
-			body := formatResponseBody(res, httpreq, pretty)
+		if opts.printV == "A" || opts.printV == "b" {
+			body := formatResponseBody(res, httpreq, opts.pretty, opts.contentJsonRegex)
 			fmt.Println(body)
 		}
 	}
+	return err
 }
 
-var usageinfo string = `bat is a Go implemented CLI cURL-like tool for humans.
+var usageinfo string = `abat is a Go implemented CLI cURL-like tool for humans.
 
 Usage:
 
-	bat [flags] [METHOD] URL [ITEM [ITEM]]
+	abat [flags] [METHOD] URL [ITEM [ITEM]]
 	
 flags:
   -a, -auth=USER[:PASS]       Pass a username:password pair as the argument
-  -b, -bench=false            Sends bench requests to URL
-  -b.N=1000                   Number of requests to run
-  -b.C=100                    Number of requests to run concurrently
   -body=""                    Send RAW data as body
   -f, -form=false             Submitting the data as a form
   -j, -json=true              Send the data in a JSON object
@@ -323,8 +323,11 @@ flags:
          "b" response body
   -v, -verison=true           Show Version Number 
 
+  attack help                 Usage of abat attack
+  report help                 Usage of abat report
+
 METHOD:
-   bat defaults to either GET (if there is no request data) or POST (with request data).
+   abat defaults to either GET (if there is no request data) or POST (with request data).
 
 URL:
   The only information needed to perform a request is a URL. The default scheme is http://,
@@ -339,12 +342,12 @@ ITEM:
 
 Example:
     
-	bat beego.me
+	abat t.tt
 	
-more help information please refer to https://github.com/astaxie/bat	
+more help information please refer to https://github.com/iruimeng/abat	
 `
 
-func usage() {
+func batUsage() {
 	fmt.Println(usageinfo)
 	os.Exit(2)
 }

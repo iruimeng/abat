@@ -9,7 +9,7 @@ import (
 )
 
 func reportCmd() command {
-	fs := flag.NewFlagSet("stress report", flag.ExitOnError)
+	fs := flag.NewFlagSet("abat report", flag.ExitOnError)
 	opts := &reportOpts{}
 
 	fs.StringVar(&opts.reporter, "reporter", "text", "Reporter [text, json, plot]")
@@ -35,17 +35,17 @@ func report(opts *reportOpts) error {
 	rep, ok := reporters[opts.reporter]
 	if !ok {
 		log.Println("Reporter provided is not supported. Using text")
-		rep = stress.ReportText
+		rep = abat.ReportText
 	}
 
-	var all stress.Results
+	var all abat.Results
 	for _, input := range strings.Split(opts.inputf, ",") {
 		in, err := file(input, false)
 		if err != nil {
 			return err
 		}
 
-		var results stress.Results
+		var results abat.Results
 		if err = results.Decode(in); err != nil {
 			return err
 		}
@@ -70,8 +70,8 @@ func report(opts *reportOpts) error {
 	return err
 }
 
-var reporters = map[string]stress.Reporter{
-	"text": stress.ReportText,
-	"json": stress.ReportJSON,
-	"plot": stress.ReportPlot,
+var reporters = map[string]abat.Reporter{
+	"text": abat.ReportText,
+	"json": abat.ReportJSON,
+	"plot": abat.ReportPlot,
 }

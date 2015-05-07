@@ -11,10 +11,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/astaxie/bat/httplib"
+	abat "github.com/iruimeng/abat/lib"
 )
 
-var defaultSetting = httplib.BeegoHttpSettings{
+var defaultSetting = abat.BeegoHttpSettings{
 	ShowDebug:        true,
 	UserAgent:        "bat/" + version,
 	ConnectTimeout:   60 * time.Second,
@@ -23,13 +23,13 @@ var defaultSetting = httplib.BeegoHttpSettings{
 	DumpBody:         true,
 }
 
-func getHTTP(method string, url string, args []string) (r *httplib.BeegoHttpRequest) {
-	r = httplib.NewBeegoRequest(url, method)
+func getHTTP(method string, url string, args []string, opts *batOpts) (r *abat.BeegoHttpRequest) {
+	r = abat.NewBeegoRequest(url, method)
 	r.Setting(defaultSetting)
 	r.Header("Accept-Encoding", "gzip, deflate")
-	if *isjson {
+	if opts.isjson {
 		r.Header("Accept", "application/json")
-	} else if form || method == "GET" {
+	} else if opts.form || opts.method == "GET" {
 		r.Header("Accept", "*/*")
 	} else {
 		r.Header("Accept", "application/json")
@@ -52,10 +52,10 @@ func getHTTP(method string, url string, args []string) (r *httplib.BeegoHttpRequ
 				if err != nil {
 					log.Fatal("Read from File", strings.TrimLeft(strs[1], "@"), "Unmarshal", err)
 				}
-				jsonmap[strs[0]] = j
+				opts.jsonmap[strs[0]] = j
 				continue
 			}
-			jsonmap[strs[0]] = toRealType(strs[1])
+			opts.jsonmap[strs[0]] = toRealType(strs[1])
 			continue
 		}
 		// Headers
@@ -81,36 +81,36 @@ func getHTTP(method string, url string, args []string) (r *httplib.BeegoHttpRequ
 				}
 				strs[1] = string(content)
 			}
-			if form || method == "GET" {
+			if opts.form || opts.method == "GET" {
 				r.Param(strs[0], strs[1])
 			} else {
-				jsonmap[strs[0]] = strs[1]
+				opts.jsonmap[strs[0]] = strs[1]
 			}
 			continue
 		}
 		// files
 		strs = strings.Split(args[i], "@")
 		if len(strs) == 2 {
-			if !form {
+			if !opts.form {
 				log.Fatal("file upload only support in forms style: -f=true")
 			}
 			r.PostFile(strs[0], strs[1])
 			continue
 		}
 	}
-	if !form && len(jsonmap) > 0 {
-		r.JsonBody(jsonmap)
+	if !opts.form && len(opts.jsonmap) > 0 {
+		r.JsonBody(opts.jsonmap)
 	}
 	return
 }
 
-func formatResponseBody(res *http.Response, httpreq *httplib.BeegoHttpRequest, pretty bool) string {
+func formatResponseBody(res *http.Response, httpreq *abat.BeegoHttpRequest, pretty bool, jsonRegex string) string {
 	body, err := httpreq.Bytes()
 	if err != nil {
 		log.Fatalln("can't get the url", err)
 	}
 	fmt.Println("")
-	if pretty && strings.Contains(res.Header.Get("Content-Type"), contentJsonRegex) {
+	if pretty && strings.Contains(res.Header.Get("Content-Type"), jsonRegex) {
 		var output bytes.Buffer
 		err := json.Indent(&output, body, "", "  ")
 		if err != nil {

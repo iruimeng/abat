@@ -1,7 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"flag"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net"
+	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	abat "github.com/iruimeng/abat/lib"
@@ -84,7 +92,7 @@ func attack(opts *attackOpts) error {
 		}
 	}
 
-	targets, err := stress.NewTargetsFrom(in, body, opts.headers.Header)
+	targets, err := abat.NewTargetForm(in, body, opts.headers.Header)
 	if err != nil {
 		return fmt.Errorf("Target file (%s): %s", opts.targetsf, err)
 	}
@@ -104,12 +112,12 @@ func attack(opts *attackOpts) error {
 	}
 	defer out.Close()
 
-	attacker := stress.NewAttacker(opts.redirects, opts.timeout, *opts.laddr.IPAddr)
+	attacker := abat.NewAttacker(opts.redirects, opts.timeout, *opts.laddr.IPAddr)
 
-	var results stress.Results
+	var results abat.Results
 	if opts.rate != 0 {
 		log.Printf(
-			"Stress is attacking %d targets in %s order and %d rate for %s...\n",
+			"abat is attacking %d targets in %s order and %d rate for %s...\n",
 			len(targets),
 			opts.ordering,
 			opts.rate,
@@ -122,7 +130,7 @@ func attack(opts *attackOpts) error {
 			concurrency = opts.number
 		}
 		log.Printf(
-			"Stress is attacking %d targets in %s order and %d concurrency level for %d times...\n",
+			"abat is attacking %d targets in %s order and %d concurrency level for %d times...\n",
 			len(targets),
 			opts.ordering,
 			concurrency,
@@ -137,7 +145,7 @@ func attack(opts *attackOpts) error {
 		return err
 	}
 
-	data, err := stress.ReportText(results)
+	data, err := abat.ReportText(results)
 	if err != nil {
 		return err
 	}

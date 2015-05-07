@@ -17,6 +17,7 @@ package abat
 
 import (
 	"crypto/md5"
+	"crypto/tls"
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
@@ -55,7 +56,7 @@ var remain int64
 // timeout每个请求超时时间
 //
 // laddr本地ip用作每次请求
-func NewAttacker(redirects int, timeout time.Duration, laddr net.IPAddr) Attacker {
+func NewAttacker(redirects int, timeout time.Duration, laddr net.IPAddr) *Attacker {
 	return &Attacker{http.Client{
 		Transport: &http.Transport{
 			Proxy: http.ProxyFromEnvironment,
@@ -137,7 +138,7 @@ func (a *Attacker) hit(tgt Target) (rs Result) {
 	} else {
 		//结果md5验证
 		if strings.Contains(tgt.File, "md5") {
-			kv = strings.Split(tgt.File, ":")
+			kv := strings.Split(tgt.File, ":")
 			if len(kv) == 2 && kv[1] != "" && len(kv[1]) == 32 {
 				m := md5.New()
 				m.Write(bbody)
@@ -161,7 +162,7 @@ func (a *Attacker) hit(tgt Target) (rs Result) {
 
 // AttackConcy在并发数为concurrency进行number次的请求，结果放进slice返回。和ab -n -c一样
 func (a *Attacker) AttackConcy(tgts Targets, concurrency uint64, number uint64) Results {
-	chanrs = make(chan Results)
+	chanrs := make(chan Results)
 	atomic.StoreInt64(&remain, int64(concurrency))
 
 	//并发数不能大于请求数
@@ -176,7 +177,7 @@ func (a *Attacker) AttackConcy(tgts Targets, concurrency uint64, number uint64) 
 
 	rs := make(Results, 0, number)
 	for i = 0; i < concurrency; i++ {
-		rs = append(rs, <-chanrs)
+		rs = append(rs, <-chanrs...)
 	}
 	return rs.Sort()
 }
@@ -197,7 +198,7 @@ func (a *Attacker) shoot(tgts Targets) (rs Results) {
 		if err != nil {
 			r.Errors = err.Error()
 			rs = append(rs, r)
-			localRemain == atomic.LoadInt64(&remain)
+			localRemain = atomic.LoadInt64(&remain)
 			continue
 		}
 
@@ -206,7 +207,7 @@ func (a *Attacker) shoot(tgts Targets) (rs Results) {
 		if err != nil {
 			r.Errors = err.Error()
 			rs = append(rs, r)
-			localRemain == atomic.LoadInt64(&remain)
+			localRemain = atomic.LoadInt64(&remain)
 			continue
 		}
 
@@ -219,7 +220,7 @@ func (a *Attacker) shoot(tgts Targets) (rs Results) {
 				r.Errors = fmt.Sprintf("%s %s: %s", tgt.Method, tgt.Url, do.Status)
 			}
 			rs = append(rs, r)
-			localRemain == atomic.LoadInt64(&remain)
+			localRemain = atomic.LoadInt64(&remain)
 			continue
 		}
 
@@ -228,7 +229,7 @@ func (a *Attacker) shoot(tgts Targets) (rs Results) {
 
 		if r.HttpCode >= 300 || r.HttpCode < 200 {
 			r.Errors = fmt.Sprintf("%s %s: %s", tgt.Method, tgt.Url, do.Status)
-			log.Printf("%s\n", r.Error)
+			log.Printf("%s\n", r.Errors)
 		} else {
 			if strings.Contains(tgt.File, "md5") {
 
@@ -237,7 +238,7 @@ func (a *Attacker) shoot(tgts Targets) (rs Results) {
 		}
 		rs = append(rs, r)
 
-		localRemain == atomic.LoadInt64(&remain)
+		localRemain = atomic.LoadInt64(&remain)
 	}
 	return
 }

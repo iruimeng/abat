@@ -26,9 +26,9 @@ func ColorStart(color uint8) string {
 	return fmt.Sprintf("\033[%dm", color)
 }
 
-func ColorfulRequest(str string) string {
+func ColorfulRequest(str string, opts *batOpts) string {
 	lines := strings.Split(str, "\n")
-	if printV == "A" || printV == "H" {
+	if opts.printV == "A" || opts.printV == "H" {
 		strs := strings.Split(lines[0], " ")
 		strs[0] = Color(strs[0], Magenta)
 		strs[1] = Color(strs[1], Cyan)
@@ -47,8 +47,8 @@ func ColorfulRequest(str string) string {
 	return strings.Join(lines, "\n")
 }
 
-func ColorfulResponse(str, contenttype string) string {
-	if strings.Contains(contenttype, contentJsonRegex) {
+func ColorfulResponse(str, contenttype string, opts *batOpts) string {
+	if strings.Contains(contenttype, opts.contentJsonRegex) {
 		str = ColorfulJson(str)
 	} else {
 		str = ColorfulHTML(str)

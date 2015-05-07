@@ -53,7 +53,7 @@ func ReportPlot(results []Result) ([]byte, error) {
 		point = "[" + strconv.FormatFloat(
 			results[i].Timestamp.Sub(results[0].Timestamp).Seconds(), 'f', -1, 32) + ","
 
-		if results[i].Error == "" {
+		if results[i].Errors == "" {
 			point += "NaN," + strconv.FormatFloat(results[i].Latency.Seconds()*1000, 'f', -1, 32) + "],"
 		} else {
 			point += strconv.FormatFloat(results[i].Latency.Seconds()*1000, 'f', -1, 32) + ",NaN],"

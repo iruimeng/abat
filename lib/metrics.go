@@ -48,18 +48,18 @@ func NewMetrics(results []Result) *Metrics {
 
 	for _, result := range results {
 		quants.Insert(float64(result.Latency))
-		m.StatusCodes[strconv.Itoa(int(result.Code))]++
+		m.StatusCodes[strconv.Itoa(int(result.HttpCode))]++
 		totalLatencies += result.Latency
 		m.BytesOut.Total += result.BytesOut
 		m.BytesIn.Total += result.BytesIn
 		if result.Latency > m.Latencies.Max {
 			m.Latencies.Max = result.Latency
 		}
-		if result.Code >= 200 && result.Code < 250 {
+		if result.HttpCode >= 200 && result.HttpCode < 250 {
 			totalSuccess++
 		}
-		if result.Error != "" {
-			errorSet[result.Error] = struct{}{}
+		if result.Errors != "" {
+			errorSet[result.Errors] = struct{}{}
 		}
 	}
 

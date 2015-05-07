@@ -95,28 +95,28 @@ func NewBeegoRequest(rawurl, method string) *BeegoHttpRequest {
 }
 
 // Get returns *BeegoHttpRequest with GET method.
-func Get(url string) *BeegoHttpRequest {
-	return NewBeegoRequest(url, "GET")
+func Get(uurl string) *BeegoHttpRequest {
+	return NewBeegoRequest(uurl, "GET")
 }
 
 // Post returns *BeegoHttpRequest with POST method.
-func Post(url string) *BeegoHttpRequest {
-	return NewBeegoRequest(url, "POST")
+func Post(uurl string) *BeegoHttpRequest {
+	return NewBeegoRequest(uurl, "POST")
 }
 
 // Put returns *BeegoHttpRequest with PUT method.
-func Put(url string) *BeegoHttpRequest {
-	return NewBeegoRequest(url, "PUT")
+func Put(uurl string) *BeegoHttpRequest {
+	return NewBeegoRequest(uurl, "PUT")
 }
 
 // Delete returns *BeegoHttpRequest DELETE method.
-func Delete(url string) *BeegoHttpRequest {
-	return NewBeegoRequest(url, "DELETE")
+func Delete(uurl string) *BeegoHttpRequest {
+	return NewBeegoRequest(uurl, "DELETE")
 }
 
 // Head returns *BeegoHttpRequest with HEAD method.
-func Head(url string) *BeegoHttpRequest {
-	return NewBeegoRequest(url, "HEAD")
+func Head(uurl string) *BeegoHttpRequest {
+	return NewBeegoRequest(uurl, "HEAD")
 }
 
 // BeegoHttpSettings
@@ -135,7 +135,7 @@ type BeegoHttpSettings struct {
 
 // BeegoHttpRequest provides more useful methods for requesting one url than http.Request.
 type BeegoHttpRequest struct {
-	url     string
+	uurl    string
 	req     *http.Request
 	params  map[string]string
 	files   map[string]string
@@ -303,10 +303,10 @@ func (b *BeegoHttpRequest) JsonBody(obj interface{}) (*BeegoHttpRequest, error) 
 func (b *BeegoHttpRequest) buildUrl(paramBody string) {
 	// build GET url with query string
 	if b.req.Method == "GET" && len(paramBody) > 0 {
-		if strings.Index(b.url, "?") != -1 {
-			b.url += "&" + paramBody
+		if strings.Index(b.uurl, "?") != -1 {
+			b.uurl += "&" + paramBody
 		} else {
-			b.url = b.url + "?" + paramBody
+			b.uurl = b.uurl + "?" + paramBody
 		}
 		return
 	}
@@ -380,12 +380,12 @@ func (b *BeegoHttpRequest) SendOut() (*http.Response, error) {
 	}
 
 	b.buildUrl(paramBody)
-	url, err := url.Parse(b.url)
+	uurl, err := url.Parse(b.uurl)
 	if err != nil {
 		return nil, err
 	}
 
-	b.req.URL = url
+	b.req.URL = uurl
 
 	trans := b.setting.Transport
 

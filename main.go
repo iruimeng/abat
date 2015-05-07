@@ -17,29 +17,25 @@
 package main
 
 import (
-	"crypto/tls"
-	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"log"
-	"net/http"
-	"net/url"
 	"os"
-	"path/filepath"
 	"runtime"
-	"strconv"
-	"strings"
 )
 
 func main() {
-	commands := map[string]command{"accack": attackCmd(), "report": reportCmd(), "bat": batCmd()}
+	commands := map[string]command{"bat": batCmd(), "attack": attackCmd(), "report": reportCmd()}
 
 	flag.Usage = func() {
-		fmt.Println("Usage: abat [flags] [METHOD] URL [ITEM [ITEM]]")
+		fmt.Println("Usage: abat [METHOD] [flags] URL [ITEM [ITEM]]")
 		for name, cmd := range commands {
-			fmt.Printf("\n%s command:\n", name)
+			if name == "bat" {
+				fmt.Printf("\n[%s] command:\n", name)
+			} else {
+
+				fmt.Printf("\n%s command:\n", name)
+			}
 			cmd.fs.PrintDefaults()
 		}
 		fmt.Printf("\nglobal flags:\n  -cpus=%d Number of CPUs to use\n", runtime.NumCPU())
@@ -57,7 +53,7 @@ func main() {
 	}
 	if cmd, ok := commands[args[0]]; !ok {
 		//默认走bat命令
-		if err := batCmd(args); err != nil {
+		if err := batCmd().fn(args); err != nil {
 			log.Fatal(err)
 		}
 	} else if err := cmd.fn(args[1:]); err != nil {
@@ -68,12 +64,12 @@ func main() {
 var examples string = `
 examples:
 	abat t.tt
-	abat attact help
-	abat report help
+	abat attack -h
+	echo "POST http://127.0.0.1:8081/ form:filename:1.jpeg" | abat attack -duration=5s -rate=1 | tee results.bin | abat report
+    abat attack -targets=targets.txt > results.bin
+    abat report -input=results.bin -reporter=json > metrics.json
+    cat results.bin | stress report -reporter=plot > plot.html
 `
-
-//abat report -input=results.bin -reporter=json > metrics.json
-//abat attack -target=targets.txt > log.bin
 
 type command struct {
 	fs *flag.FlagSet
