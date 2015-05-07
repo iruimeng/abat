@@ -15,6 +15,7 @@ Fork from [bat](https://github.com/astaxie/bat), use  a versatile HTTP load test
 - [HTTP Headers](#http-headers)
 - [Authentication](#authentication)
 - [Proxies](#proxies)
+- [License](#license)
 
 ## Main Features
 
@@ -41,7 +42,7 @@ Synopsis:
 
 	abat [METHOD] [flags] URL [ITEM [ITEM]]
 	
-See also `abat --help`. `abat attact help`. `abat report help`
+See also `abat --help`. `abat attack -h`. `abat report -h`
 
 ### Examples
 
@@ -82,7 +83,71 @@ Set a custom Host header to work around missing DNS records:
 	$ abat localhost:8000 Host:example.com
 	
 Following is the detailed documentation. It covers the command syntax, advanced usage, and also features additional examples.
-	
+
+### attack
+
+````
+$ abat attack -h
+Usage of stress attack:
+  -body="": Requests body file
+  -c=10: Concurrency level
+  -duration=10s: Duration of the test
+  -header=: Request header
+  -laddr=0.0.0.0: Local IP address
+  -n=1000: Requests number
+  -ordering="random": Attack ordering [sequential, random]
+  -output="result.json": Output file
+  -rate=50: Requests per second
+  -redirects=10: Number of redirects to follow
+  -targets="stdin": Targets file
+  -timeout=0: Requests timeout
+````
+#### -targets
+Specifies the attack targets in a line separated file, defaulting to stdin. The format should be as follows.
+````
+	GET www.baidu.com
+	HEAD t.tt
+````
+
+### report
+````
+$ abat report -h
+Usage of stress report:
+  -input="stdin": Input files (comma separated)
+  -output="stdout": Output file
+  -reporter="text": Reporter [text, json, plot]
+````
+
+#### -input
+Specifies the input files to generate the report of, defaulting to stdin.
+These are the output of stress attack. You can specify more than one (comma
+separated) and they will be merged and sorted before being used by the
+reports.
+
+#### -output
+Specifies the output file to which the report will be written to.
+
+#### -reporter
+Specifies the kind of report to be generated. It defaults to text.
+
+##### text
+````
+Requests      [total]                   1200
+Duration      [total]                   1.998307684s
+Latencies     [mean, 50, 95, 99, max]   223.340085ms, 240.12234ms, 326.913687ms, 416.537743ms, 7.788103259s
+Bytes In      [total, mean]             3714690, 3095.57
+Bytes Out     [total, mean]             0, 0.00
+Success       [ratio]                   55.42%
+Status Codes  [code:count]              0:535  200:665
+Error Set:
+Get http://localhost:6060: dial tcp 127.0.0.1:6060: connection refused
+Get http://localhost:6060: read tcp 127.0.0.1:6060: connection reset by peer
+Get http://localhost:6060: dial tcp 127.0.0.1:6060: connection reset by peer
+Get http://localhost:6060: write tcp 127.0.0.1:6060: broken pipe
+Get http://localhost:6060: net/http: transport closed before response was received
+Get http://localhost:6060: http: can't write HTTP request on broken connection
+````
+
 ## HTTP Method
 The name of the HTTP method comes right before the URL argument:
 
@@ -274,70 +339,7 @@ In your ~/.bash_profile:
 
 
 
-## attack
 
-````
-➜ abat git:(master)# abat attack -h
-Usage of stress attack:
-  -body="": Requests body file
-  -c=10: Concurrency level
-  -duration=10s: Duration of the test
-  -header=: Request header
-  -laddr=0.0.0.0: Local IP address
-  -n=1000: Requests number
-  -ordering="random": Attack ordering [sequential, random]
-  -output="result.json": Output file
-  -rate=50: Requests per second
-  -redirects=10: Number of redirects to follow
-  -targets="stdin": Targets file
-  -timeout=0: Requests timeout
-````
-#### -targets
-
-In your targets.txt :
-````
-	GET www.baidu.com
-	HEAD t.tt
-````
-
-## report
-````
-➜ abat git:(master)# abat report -h
-Usage of stress report:
-  -input="stdin": Input files (comma separated)
-  -output="stdout": Output file
-  -reporter="text": Reporter [text, json, plot]
-````
-
-#### -input
-Specifies the input files to generate the report of, defaulting to stdin.
-These are the output of stress attack. You can specify more than one (comma
-separated) and they will be merged and sorted before being used by the
-reports.
-
-#### -output
-Specifies the output file to which the report will be written to.
-
-#### -reporter
-Specifies the kind of report to be generated. It defaults to text.
-
-##### text
-````
-Requests      [total]                   1200
-Duration      [total]                   1.998307684s
-Latencies     [mean, 50, 95, 99, max]   223.340085ms, 240.12234ms, 326.913687ms, 416.537743ms, 7.788103259s
-Bytes In      [total, mean]             3714690, 3095.57
-Bytes Out     [total, mean]             0, 0.00
-Success       [ratio]                   55.42%
-Status Codes  [code:count]              0:535  200:665
-Error Set:
-Get http://localhost:6060: dial tcp 127.0.0.1:6060: connection refused
-Get http://localhost:6060: read tcp 127.0.0.1:6060: connection reset by peer
-Get http://localhost:6060: dial tcp 127.0.0.1:6060: connection reset by peer
-Get http://localhost:6060: write tcp 127.0.0.1:6060: broken pipe
-Get http://localhost:6060: net/http: transport closed before response was received
-Get http://localhost:6060: http: can't write HTTP request on broken connection
-````
 
 #License
 
