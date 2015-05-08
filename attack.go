@@ -92,8 +92,9 @@ func attack(opts *attackOpts) error {
 		}
 	}
 
-	targets, err := abat.NewTargetForm(in, body, opts.headers.Header)
-	if err != nil {
+	targets, err := abat.NewTargetFrom(in, body, opts.headers.Header)
+	//fmt.Println(targets)
+	if err != nil || len(targets) == 0 {
 		return fmt.Errorf("Target file (%s): %s", opts.targetsf, err)
 	}
 

@@ -107,7 +107,7 @@ func (t *Target) Request() (req *http.Request, err error) {
 }
 
 // NewTargetForm 设置所有http.Header的头。
-func NewTargetForm(source io.Reader, bbody []byte, header http.Header) (tgts Targets, err error) {
+func NewTargetFrom(source io.Reader, bbody []byte, header http.Header) (tgts Targets, err error) {
 	scanner := bufio.NewScanner(source)
 	var lines []string
 	for scanner.Scan() {
@@ -129,6 +129,7 @@ func NewTargets(lines []string, bbody []byte, header http.Header) (tgts Targets,
 	for _, line := range lines {
 		tmpAr := strings.Split(line, " ")
 		argc := len(tmpAr)
+		//fmt.Println(tmpAr)
 
 		if argc < 2 {
 			err = fmt.Errorf("Invalid request format: `%s`", line)
@@ -143,8 +144,8 @@ func NewTargets(lines []string, bbody []byte, header http.Header) (tgts Targets,
 
 		ii := 1
 
-		if strings.Contains(tmpAr[ii], "http") == false {
-			for ; strings.Contains(tmpAr[ii], "http") == false; ii++ {
+		if strings.Contains(tmpAr[ii], "http") == false && strings.Contains(tmpAr[ii], ".") == false {
+			for ; ii < len(tmpAr) && (strings.Contains(tmpAr[ii], "http") == false && strings.Contains(tmpAr[ii], ".") == false); ii++ {
 				kv := strings.Split(tmpAr[ii], ":")
 				if len(kv) == 2 {
 					newHeader.Set(kv[0], kv[1])
@@ -153,7 +154,6 @@ func NewTargets(lines []string, bbody []byte, header http.Header) (tgts Targets,
 				}
 			}
 		}
-
 		var url, file string
 
 		if ii < argc {
