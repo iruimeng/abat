@@ -81,6 +81,10 @@ func NewAttacker(redirects int, timeout time.Duration, laddr net.IPAddr) *Attack
 }
 
 // AttackRate是规定时间(duration time)内按照(rate)频率来请求，并等待所以请求返回。
+func AttackRate(tgts Targets, rate uint64, du time.Duration) Results {
+	return DefaultAttacker.AttackRate(tgts, rate, du)
+}
+
 // 压测结果放在一个slice返回。
 func (a *Attacker) AttackRate(tgts Targets, rate uint64, du time.Duration) Results {
 	hits := int(rate * uint64(du.Seconds()))
