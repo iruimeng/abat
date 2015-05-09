@@ -17,8 +17,6 @@ import (
 	"strings"
 )
 
-const version = "0.0.3"
-
 //isjson           = flag.Bool("json", true, "Send the data as a JSON object")
 //method           = flag.String("method", "GET", "HTTP method")
 //URL              = flag.String("url", "", "HTTP request URL")

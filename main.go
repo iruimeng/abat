@@ -24,6 +24,9 @@ import (
 	"runtime"
 )
 
+//abat version
+const version = "0.0.2"
+
 func main() {
 	commands := map[string]command{"bat": batCmd(), "attack": attackCmd(), "report": reportCmd()}
 
@@ -63,9 +66,10 @@ func main() {
 
 var examples string = `
 examples:
-	abat t.tt
-	abat attack -h
-	echo "POST http://127.0.0.1:8081/ form:filename:1.jpeg" | abat attack -duration=5s -rate=1 | tee results.bin | abat report
+    abat t.tt
+    abat attack -h
+    echo "http://baidu.com" | abat attack -n=10 -c=2
+    echo "POST http://127.0.0.1:8081/ form:filename:1.jpeg" | abat attack -duration=5s -rate=1 | tee results.bin | abat report
     abat attack -targets=targets.txt > results.bin
     abat report -input=results.bin -reporter=json > metrics.json
     cat results.bin | stress report -reporter=plot > plot.html

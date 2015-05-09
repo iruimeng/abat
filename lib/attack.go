@@ -167,7 +167,7 @@ func (a *Attacker) hit(tgt Target) (rs Result) {
 // AttackConcy在并发数为concurrency进行number次的请求，结果放进slice返回。和ab -n -c一样
 func (a *Attacker) AttackConcy(tgts Targets, concurrency uint64, number uint64) Results {
 	chanrs := make(chan Results)
-	atomic.StoreInt64(&remain, int64(concurrency))
+	atomic.StoreInt64(&remain, int64(number))
 
 	//并发数不能大于请求数
 	if concurrency > number {
@@ -215,10 +215,16 @@ func (a *Attacker) shoot(tgts Targets) (rs Results) {
 			continue
 		}
 
-		r.BytesOut = uint64(q.ContentLength)
+		//r.BytesOut = uint64(do.ContentLength)
 		r.HttpCode = uint16(do.StatusCode)
 
 		boby, err := ioutil.ReadAll(do.Body)
+		//chunked时候，ContentLength为-1
+		if do.ContentLength == -1 {
+			r.BytesOut = uint64(len(boby))
+		} else {
+			r.BytesOut = uint64(do.ContentLength)
+		}
 		if err != nil {
 			if r.HttpCode >= 300 || r.HttpCode < 200 {
 				r.Errors = fmt.Sprintf("%s %s: %s", tgt.Method, tgt.Url, do.Status)
@@ -229,7 +235,7 @@ func (a *Attacker) shoot(tgts Targets) (rs Results) {
 		}
 
 		r.Latency = time.Since(r.Timestamp)
-		r.BytesIn = uint64(len(boby))
+		//r.BytesIn = uint64(len(boby))
 
 		if r.HttpCode >= 300 || r.HttpCode < 200 {
 			r.Errors = fmt.Sprintf("%s %s: %s", tgt.Method, tgt.Url, do.Status)

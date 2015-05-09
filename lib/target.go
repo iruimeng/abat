@@ -100,9 +100,8 @@ func (t *Target) Request() (req *http.Request, err error) {
 		req.Header[key] = make([]string, len(val))
 		copy(req.Header[key], val)
 	}
-	req.Header.Set("User-Agent", "abat 0.1")
-
-	fmt.Println(req.Header)
+	req.Header.Set("User-Agent", "abat 0.0.2")
+	//fmt.Println(req.Header)
 	return
 }
 
@@ -129,11 +128,19 @@ func NewTargets(lines []string, bbody []byte, header http.Header) (tgts Targets,
 	for _, line := range lines {
 		tmpAr := strings.Split(line, " ")
 		argc := len(tmpAr)
-		//fmt.Println(tmpAr)
 
-		if argc < 2 {
+		if argc < 1 {
 			err = fmt.Errorf("Invalid request format: `%s`", line)
 			return
+		}
+		var method, url, file string
+		var ii int
+		if argc == 1 {
+			method = "GET"
+			ii = 0
+		} else {
+			method = tmpAr[0]
+			ii = 1
 		}
 
 		newHeader := http.Header{}
@@ -141,9 +148,7 @@ func NewTargets(lines []string, bbody []byte, header http.Header) (tgts Targets,
 			newHeader[k] = make([]string, len(v))
 			copy(newHeader[k], v)
 		}
-
-		ii := 1
-
+		//判断是否为url，设置Header
 		if strings.Contains(tmpAr[ii], "http") == false && strings.Contains(tmpAr[ii], ".") == false {
 			for ; ii < len(tmpAr) && (strings.Contains(tmpAr[ii], "http") == false && strings.Contains(tmpAr[ii], ".") == false); ii++ {
 				kv := strings.Split(tmpAr[ii], ":")
@@ -154,12 +159,10 @@ func NewTargets(lines []string, bbody []byte, header http.Header) (tgts Targets,
 				}
 			}
 		}
-		var url, file string
-
 		if ii < argc {
 			url = tmpAr[ii]
 		} else {
-			url = ""
+			continue
 		}
 		ii++
 		if ii < argc {
@@ -167,9 +170,8 @@ func NewTargets(lines []string, bbody []byte, header http.Header) (tgts Targets,
 		} else {
 			file = ""
 		}
-		if url != "" {
-			tgts = append(tgts, Target{Method: tmpAr[0], Url: url, File: file, Body: bbody, Header: newHeader})
-		}
+
+		tgts = append(tgts, Target{Method: method, Url: url, File: file, Body: bbody, Header: newHeader})
 	}
 	return
 }

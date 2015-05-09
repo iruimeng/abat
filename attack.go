@@ -23,15 +23,18 @@ func attackCmd() command {
 	}
 
 	fs.StringVar(&opts.targetsf, "targets", "stdin", "Targets file")
+	fs.StringVar(&opts.targetsf, "t", "stdin", "Targets file")
 	fs.StringVar(&opts.outputf, "output", "result.json", "Output file")
+	fs.StringVar(&opts.outputf, "o", "result.json", "Output file")
 	fs.StringVar(&opts.bodyf, "body", "", "Requests body file")
 	fs.StringVar(&opts.ordering, "ordering", "random", "Attack ordering [sequential, random]")
 	fs.DurationVar(&opts.duration, "duration", 10*time.Second, "Duration of the test")
 	fs.DurationVar(&opts.timeout, "timeout", 0, "Requests timeout")
 	fs.Uint64Var(&opts.rate, "rate", 0, "Requests per second")
+	fs.Uint64Var(&opts.rate, "r", 0, "Requests per second")
 	fs.Uint64Var(&opts.concurrency, "c", 0, "Concurrency level")
 	fs.Uint64Var(&opts.number, "n", 1000, "Requests number")
-	fs.IntVar(&opts.redirects, "redirects", 10, "Number of redirects to follow")
+	fs.IntVar(&opts.redirects, "redirects", 5, "Number of redirects to follow")
 	fs.Var(&opts.headers, "header", "Request header")
 	fs.Var(&opts.laddr, "laddr", "Local IP address")
 
@@ -137,7 +140,7 @@ func attack(opts *attackOpts) error {
 			concurrency,
 			opts.number,
 		)
-		results = attacker.AttackConcy(targets, opts.concurrency, opts.number)
+		results = attacker.AttackConcy(targets, concurrency, opts.number)
 	}
 
 	log.Printf("Done! Writing results to '%s'...", opts.outputf)
