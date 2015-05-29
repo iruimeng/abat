@@ -111,9 +111,10 @@ func NewTargetFrom(source io.Reader, bbody []byte, header http.Header) (tgts Tar
 	var lines []string
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		if line != "" && line[0:2] != "//" {
-			lines = append(lines, line)
+		if line == "" || line[0:2] == "//" || line[0:1] == "#" {
+			continue
 		}
+		lines = append(lines, line)
 	}
 	if err = scanner.Err(); err != nil {
 		return

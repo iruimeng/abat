@@ -164,6 +164,10 @@ func (a *Attacker) hit(tgt Target) (rs Result) {
 
 }
 
+func AttackConcy(tgts Targets, concurrency uint64, number uint64) Results {
+	return DefaultAttacker.AttackConcy(tgts, concurrency, number)
+}
+
 // AttackConcy在并发数为concurrency进行number次的请求，结果放进slice返回。和ab -n -c一样
 func (a *Attacker) AttackConcy(tgts Targets, concurrency uint64, number uint64) Results {
 	chanrs := make(chan Results)
