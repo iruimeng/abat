@@ -88,7 +88,7 @@ Following is the detailed documentation. It covers the command syntax, advanced 
 
 ````
 $ abat attack -h
-Usage of stress attack:
+Usage of abat attack:
   -body="": Requests body file
   -c=10: Concurrency level
   -duration=10s: Duration of the test
@@ -112,10 +112,13 @@ Specifies the attack targets in a line separated file, defaulting to stdin. The 
 ### report
 ````
 $ abat report -h
-Usage of stress report:
+Usage of abat report:
   -input="stdin": Input files (comma separated)
   -output="stdout": Output file
   -reporter="text": Reporter [text, json, plot]
+
+$ abat attack -c=10 -targets=target.txt  
+$ cat result.json | abat report -reporter=plot > o.html
 ````
 
 #### -input
