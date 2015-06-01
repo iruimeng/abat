@@ -69,10 +69,10 @@ examples:
     abat t.tt
     abat attack -h
     echo "http://baidu.com" | abat attack -n=10 -c=2
+    abat attack -targets=targets.txt -c=2
+    abat report -input=results.json -reporter=json > short.json
+    cat results.json | abat report -reporter=plot > chart.html
     echo "POST http://127.0.0.1:8081/ form:filename:1.jpeg" | abat attack -duration=5s -rate=1 | tee results.bin | abat report
-    abat attack -targets=targets.txt > results.bin
-    abat report -input=results.bin -reporter=json > metrics.json
-    cat results.bin | stress report -reporter=plot > plot.html
 `
 
 type command struct {

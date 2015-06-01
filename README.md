@@ -123,7 +123,7 @@ $ cat result.json | abat report -reporter=plot > o.html
 
 #### -input
 Specifies the input files to generate the report of, defaulting to stdin.
-These are the output of stress attack. You can specify more than one (comma
+These are the output of abat attack. You can specify more than one (comma
 separated) and they will be merged and sorted before being used by the
 reports.
 
