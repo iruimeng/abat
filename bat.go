@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -15,6 +14,8 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+
+	"github.com/qiniu/log"
 )
 
 //isjson           = flag.Bool("json", true, "Send the data as a JSON object")
@@ -40,9 +41,11 @@ type batOpts struct {
 }
 
 //var opts *batOpts = &batOpts{}
+// FlagSet变量定义
+var fs *flag.FlagSet
 
 func batCmd() command {
-	fs := flag.NewFlagSet("abat bat", flag.ExitOnError)
+	fs = flag.NewFlagSet("abat bat", flag.ExitOnError)
 	opts := &batOpts{
 		contentJsonRegex: `application/json`,
 	}
@@ -77,8 +80,7 @@ func batCmd() command {
 
 // abat拥有bat命令的全部
 func bat(opts *batOpts) error {
-	args := flag.Args()
-
+	args := fs.Args()
 	//fmt.Println("bat args\n", args)
 	if len(args) > 0 {
 		args = filter(args, opts)

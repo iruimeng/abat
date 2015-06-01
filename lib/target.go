@@ -34,17 +34,19 @@ func (t *Target) Request() (req *http.Request, err error) {
 			buf := &bytes.Buffer{}
 			wtr := multipart.NewWriter(buf)
 
+			// 参数格式form:key@file
 			tmpAr := strings.Split(t.File, ":")
 			var fileKey, fileName string
-
 			if len(tmpAr) == 2 {
-				fileKey = "ffile"
-				fileName = tmpAr[1]
-			} else if len(tmpAr) == 3 {
-				fileKey = tmpAr[1]
-				fileName = tmpAr[2]
+				kv := strings.Split(tmpAr[1], "@")
+				if len(kv) != 2 {
+					err = fmt.Errorf("Form file key@file %s is illegal!", t.File)
+					return
+				}
+				fileKey = kv[0]
+				fileName = kv[1]
 			} else {
-				err = fmt.Errorf("Form file: %s is illegal!", t.File)
+				err = fmt.Errorf("Form file form:key@file %s is illegal!", t.File)
 				return
 			}
 
@@ -100,7 +102,7 @@ func (t *Target) Request() (req *http.Request, err error) {
 		req.Header[key] = make([]string, len(val))
 		copy(req.Header[key], val)
 	}
-	req.Header.Set("User-Agent", "abat 0.0.2")
+	req.Header.Set("User-Agent", "abat 0.0.3")
 	//fmt.Println(req.Header)
 	return
 }
