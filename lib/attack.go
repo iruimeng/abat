@@ -122,11 +122,18 @@ func (a *Attacker) hit(tgt Target) (rs Result) {
 		return
 	}
 
+	// the Content-Length: header gives the length of the URL-encoded form data
 	rs.BytesOut = uint64(req.ContentLength)
 	rs.HttpCode = uint16(do.StatusCode)
 
 	bbody, err := ioutil.ReadAll(do.Body)
 
+	//chunked时候，ContentLength为-1
+	if do.ContentLength == -1 {
+		rs.BytesIn = uint64(len(bbody))
+	} else {
+		rs.BytesIn = uint64(do.ContentLength)
+	}
 	if err != nil {
 		if rs.HttpCode >= 300 || rs.HttpCode < 200 {
 			rs.Errors = fmt.Sprintf("%s %s: %s", tgt.Method, tgt.Url, do.Status)
@@ -135,7 +142,6 @@ func (a *Attacker) hit(tgt Target) (rs Result) {
 	}
 
 	rs.Latency = time.Since(rs.Timestamp)
-	rs.BytesIn = uint64(len(bbody))
 
 	if rs.HttpCode >= 300 || rs.HttpCode < 200 {
 		rs.Errors = fmt.Sprintf("%s %s: %s", tgt.Method, tgt.Url, do.Status)
@@ -219,27 +225,26 @@ func (a *Attacker) shoot(tgts Targets) (rs Results) {
 			continue
 		}
 
-		//r.BytesOut = uint64(do.ContentLength)
-		r.HttpCode = uint16(do.StatusCode)
-
-		boby, err := ioutil.ReadAll(do.Body)
 		//chunked时候，ContentLength为-1
 		if do.ContentLength == -1 {
-			r.BytesOut = uint64(len(boby))
-		} else {
-			r.BytesOut = uint64(do.ContentLength)
-		}
-		if err != nil {
-			if r.HttpCode >= 300 || r.HttpCode < 200 {
-				r.Errors = fmt.Sprintf("%s %s: %s", tgt.Method, tgt.Url, do.Status)
+			bbody, err := ioutil.ReadAll(do.Body)
+			if err != nil {
+				if r.HttpCode >= 300 || r.HttpCode < 200 {
+					r.Errors = fmt.Sprintf("%s %s: %s", tgt.Method, tgt.Url, do.Status)
+				}
+				rs = append(rs, r)
+				localRemain = atomic.LoadInt64(&remain)
+				continue
 			}
-			rs = append(rs, r)
-			localRemain = atomic.LoadInt64(&remain)
-			continue
+			r.BytesIn = uint64(len(bbody))
+		} else {
+			r.BytesIn = uint64(do.ContentLength)
 		}
 
+		r.BytesOut = uint64(q.ContentLength)
+		r.HttpCode = uint16(do.StatusCode)
+
 		r.Latency = time.Since(r.Timestamp)
-		//r.BytesIn = uint64(len(boby))
 
 		if r.HttpCode >= 300 || r.HttpCode < 200 {
 			r.Errors = fmt.Sprintf("%s %s: %s", tgt.Method, tgt.Url, do.Status)
