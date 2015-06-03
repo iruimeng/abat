@@ -96,7 +96,7 @@ func (a *Attacker) AttackRate(tgts Targets, rate uint64, du time.Duration) Resul
 	for i := 0; i < hits; i++ {
 		<-ticker.C
 		go func(tgt Target) {
-			a.hit(tgt)
+			resc <- a.hit(tgt)
 		}(tgts[i%len(tgts)])
 	}
 	rs := make(Results, 0, hits)
