@@ -250,7 +250,11 @@ func bat(opts *batOpts) error {
 						}
 					}
 				}
-				fmt.Println(ColorfulRequest(string(dump), opts))
+				if len(dump) > 1000 {
+					fmt.Println(ColorfulRequest(string(dump[:1000]), opts))
+				} else {
+					fmt.Println(ColorfulRequest(string(dump), opts))
+				}
 				fmt.Println("")
 			}
 			if opts.printV == "A" || opts.printV == "h" {
