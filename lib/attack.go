@@ -163,6 +163,7 @@ func (a *Attacker) hit(tgt Target) (rs Result) {
 			}
 		}
 	}
+	do.Body.Close()
 	if rs.HttpCode >= 250 || rs.HttpCode < 200 {
 		log.Printf("%s\n", rs.Errors)
 	}
@@ -255,6 +256,7 @@ func (a *Attacker) shoot(tgts Targets) (rs Results) {
 			}
 			//@todo 对比MD5值
 		}
+		do.Body.Close()
 		rs = append(rs, r)
 
 		localRemain = atomic.LoadInt64(&remain)
